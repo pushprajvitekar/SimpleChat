@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using ZeroTier.Sockets;
 using ZTSocket = ZeroTier.Sockets.Socket;
 
 namespace SimpleChat
@@ -61,6 +62,29 @@ namespace SimpleChat
                 }
             }
             return responseStr;
+        }
+
+        public static MessagePacket ReceiveMessagePacket(this ZTSocket socket)
+        {
+            List<byte> completeBuffer = new List<byte>();
+            string? responseStr;
+            while (true)
+            {
+                var buffer = new byte[1024];
+                var byteCounter = socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
+                if (byteCounter > 0)
+                {
+                    completeBuffer.AddRange(buffer.Take(byteCounter));
+                }
+                responseStr = Encoding.ASCII.GetString(completeBuffer.ToArray());
+                if (responseStr.EndsWith(":EOM"))
+                {
+                    break;
+                }
+            }
+            // Initialise a packet object to store the received data
+            MessagePacket receivedData = new MessagePacket(completeBuffer.ToArray());
+            return receivedData;
         }
     }
 }

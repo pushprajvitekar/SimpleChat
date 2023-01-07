@@ -11,6 +11,7 @@ namespace SimpleChat
         readonly int _myPort = 50001;
         Server _listener;
         Client _client;
+        string _myNodeId;
         public frmMain()
         {
             InitializeComponent();
@@ -26,7 +27,7 @@ namespace SimpleChat
                     _myIpAddress = e.IPAddresses.First();
                     this.Invoke(new MethodInvoker(() => txtMyIp.Text = _myIpAddress.ToString()));
                     this.Invoke(new MethodInvoker(() => btnStart_Click(this, new EventArgs())));
-                    ;
+                    _myNodeId = manager.NodeId;
                 }
             }
             //if (e.Routes != null && e.Routes.Any())
@@ -103,7 +104,7 @@ namespace SimpleChat
                     _listener.OnError -= Server_OnError; ;
                     _listener.Stop();
                 }
-                _listener = new Server(IPAddress.Parse(txtMyIp.Text), Convert.ToInt32(txtMyPort.Text));
+                _listener = new Server(IPAddress.Parse(txtMyIp.Text), Convert.ToInt32(txtMyPort.Text), _myNodeId);
                 _listener.OnMessageSending += Server_OnMessageSending;
                 _listener.OnError += Server_OnError; ;
                 Task.Factory.StartNew(_listener.Start, TaskCreationOptions.LongRunning);
@@ -136,7 +137,7 @@ namespace SimpleChat
         {
             try
             {
-                AddItemToChatList($"client: {client} says: {message}");
+                AddItemToChatList($"friend[{client}]: {message}");
             }
             catch (Exception ex)
             {
@@ -152,7 +153,7 @@ namespace SimpleChat
             {
                 if (_client == null)
                 {
-                    _client = new Client(IPAddress.Parse(txtFriendIp.Text), Convert.ToInt32(txtFriendPort.Text));
+                    _client = new Client(IPAddress.Parse(txtFriendIp.Text), Convert.ToInt32(txtFriendPort.Text), _myNodeId);
                     _client.OnError += Client_OnError;
                     _client.OnMessageSending += _client_OnMessageSending;
 
@@ -161,7 +162,7 @@ namespace SimpleChat
                 if (!string.IsNullOrEmpty(message))
                 {
                     var task = Task.Factory.StartNew(() => _client.Send(message));
-                    AddItemToChatList("You: " + message);
+                    AddItemToChatList($"Me[{_myNodeId}@{_myIpAddress}]: {message}");
                     txtMessage.Clear();
                 }
             }

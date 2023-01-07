@@ -25,6 +25,7 @@ namespace SimpleChat
         public NetworkUpdatedEventArgs() : base()
         {
         }
+        public string NodeId { get; set; }
         public List<IPAddress> IPAddresses { get; set; } = new List<IPAddress>();
         public List<PeerInfo> Peers { get; set; } = new List<PeerInfo>();
 
@@ -34,7 +35,7 @@ namespace SimpleChat
     {
         // ZeroTier Node instance
 
-        ZeroTier.Core.Node node;
+        readonly Node node;
         ulong _networkId = 0;
         public delegate void ZeroTierManagerMessageHandler(object sender, ZeroTierManagerMessageEventArgs e);
         public event ZeroTierManagerMessageHandler MessageReceivedEvent;
@@ -42,10 +43,12 @@ namespace SimpleChat
         public event NetworkUpdatedEventHandler NetworkUpdatedEvent;
         public ZeroTierNodeManager()
         {
-            node = new ZeroTier.Core.Node();
+            node = new Node();
         }
         // Initialize and start ZeroTier
+        public string NodeId { get { return node?.Id.ToString("x16") ?? string.Empty; } }
 
+        public List<IPAddress> IpAdresses { get { return node.GetNetworkAddresses(_networkId); } }
         public void StartZeroTier(ulong networkId)
         {
 
@@ -90,10 +93,7 @@ namespace SimpleChat
             */
 
             node.Start();   // Network activity only begins after calling Start()
-                            //while (!node.Online)
-                            //{
-                            //    Thread.Sleep(50);
-                            //}
+
 
             //NodeDetailsUpdate();
 
@@ -104,7 +104,7 @@ namespace SimpleChat
         private void JoinNetwork(ulong networkId)
         {
             node.Join(networkId);
-            SendToMessageList("Waiting for join to complete...");
+            SendToMessageList("Waiting for authorisation from network controller to complete...");
 
         }
 
@@ -122,7 +122,7 @@ namespace SimpleChat
                     }
                     var routes = node.GetNetworkRoutes(networkId);
                     SendToMessageList("Num of routes             : " + routes.Count);
-                    foreach (ZeroTier.Core.RouteInfo route in routes)
+                    foreach (RouteInfo route in routes)
                     {
                         SendToMessageList(
                             $" -   Route: target={route.Target} via={route.Via} flags={route.Flags} metric={route.Metric}");
@@ -163,9 +163,9 @@ namespace SimpleChat
          * Your application should process event messages and return control as soon as possible. Blocking
          * or otherwise time-consuming operations are not recommended here.
          */
-        public void OnZeroTierEvent(ZeroTier.Core.Event e)
+        public void OnZeroTierEvent(Event e)
         {
-           // SendToMessageList($"Event.Code = {e.Code} ({e.Name})");
+            // SendToMessageList($"Event.Code = {e.Code} ({e.Name})");
 
             if (e.Code == ZeroTier.Constants.EVENT_NODE_ONLINE)
             {
@@ -185,7 +185,7 @@ namespace SimpleChat
             {
                 SendToMessageList(" - Network ID: " + e.NetworkInfo.Id.ToString("x16"));
             }
-           
+
 
         }
         protected virtual void SendToMessageList(string m)

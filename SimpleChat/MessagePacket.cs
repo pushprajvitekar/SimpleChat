@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace SimpleChat
 {
-    public enum DataIdentifier
+    public enum MessageType
     {
         Message,
         Enter,
         Exit,
+        Ack,
         Null
     }
 
@@ -18,34 +15,19 @@ namespace SimpleChat
     // Packet Structure
     // ----------------
 
-    // Description   -> |dataIdentifier|name length|message length|    name   |    message   |
-    // Size in bytes -> |       4      |     4     |       4      |name length|message length|
+    // Description   -> |dataIdentifier|name length|message length|    name   |    message   |:EOM
+    // Size in bytes -> |       4      |     4     |       4      |name length|message length| 4
     public class MessagePacket
     {
         #region Private Members
-        private DataIdentifier dataIdentifier;
-        private string name;
-        private string message;
         #endregion
 
         #region Public Properties
-        public DataIdentifier ChatDataIdentifier
-        {
-            get { return dataIdentifier; }
-            set { dataIdentifier = value; }
-        }
+        public MessageType MessageTypeIdentifier { get; set; }
 
-        public string ChatName
-        {
-            get { return name; }
-            set { name = value; }
-        }
+        public string ChatName { get; set; }
 
-        public string ChatMessage
-        {
-            get { return message; }
-            set { message = value; }
-        }
+        public string ChatMessage { get; set; }
         #endregion
 
         #region Methods
@@ -53,33 +35,38 @@ namespace SimpleChat
         // Default Constructor
         public MessagePacket()
         {
-            this.dataIdentifier = DataIdentifier.Null;
-            this.message = null;
-            this.name = null;
+            MessageTypeIdentifier = MessageType.Null;
         }
 
         public MessagePacket(byte[] dataStream)
         {
-            // Read the data identifier from the beginning of the stream (4 bytes)
-            this.dataIdentifier = (DataIdentifier)BitConverter.ToInt32(dataStream, 0);
+            if (dataStream != null && dataStream.Length >= 4)
+            {
+                // Read the data identifier from the beginning of the stream (4 bytes)
+                MessageTypeIdentifier = (MessageType)BitConverter.ToInt32(dataStream, 0);
 
-            // Read the length of the name (4 bytes)
-            int nameLength = BitConverter.ToInt32(dataStream, 4);
+                // Read the length of the name (4 bytes)
+                int nameLength = BitConverter.ToInt32(dataStream, 4);
 
-            // Read the length of the message (4 bytes)
-            int msgLength = BitConverter.ToInt32(dataStream, 8);
+                // Read the length of the message (4 bytes)
+                int msgLength = BitConverter.ToInt32(dataStream, 8);
 
-            // Read the name field
-            if (nameLength > 0)
-                this.name = Encoding.UTF8.GetString(dataStream, 12, nameLength);
+                // Read the name field
+                if (nameLength > 0)
+                    ChatName = Encoding.UTF8.GetString(dataStream, 12, nameLength);
+                else
+                    ChatName = string.Empty;
+
+                // Read the message field
+                if (msgLength > 0)
+                    ChatMessage = Encoding.UTF8.GetString(dataStream, 12 + nameLength, msgLength);
+                else
+                    ChatMessage = string.Empty;
+            }
             else
-                this.name = null;
+            { 
 
-            // Read the message field
-            if (msgLength > 0)
-                this.message = Encoding.UTF8.GetString(dataStream, 12 + nameLength, msgLength);
-            else
-                this.message = null;
+            }
         }
 
         // Converts the packet into a byte array for sending/receiving 
@@ -88,28 +75,29 @@ namespace SimpleChat
             List<byte> dataStream = new List<byte>();
 
             // Add the dataIdentifier
-            dataStream.AddRange(BitConverter.GetBytes((int)this.dataIdentifier));
+            dataStream.AddRange(BitConverter.GetBytes((int)MessageTypeIdentifier));
 
             // Add the name length
-            if (this.name != null)
-                dataStream.AddRange(BitConverter.GetBytes(this.name.Length));
+            if (ChatName != null)
+                dataStream.AddRange(BitConverter.GetBytes(ChatName.Length));
             else
                 dataStream.AddRange(BitConverter.GetBytes(0));
 
             // Add the message length
-            if (this.message != null)
-                dataStream.AddRange(BitConverter.GetBytes(this.message.Length));
+            if (ChatMessage != null)
+                dataStream.AddRange(BitConverter.GetBytes(ChatMessage.Length));
             else
                 dataStream.AddRange(BitConverter.GetBytes(0));
 
             // Add the name
-            if (this.name != null)
-                dataStream.AddRange(Encoding.UTF8.GetBytes(this.name));
+            if (ChatName != null)
+                dataStream.AddRange(Encoding.UTF8.GetBytes(ChatName));
 
             // Add the message
-            if (this.message != null)
-                dataStream.AddRange(Encoding.UTF8.GetBytes(this.message));
+            if (ChatMessage != null)
+                dataStream.AddRange(Encoding.UTF8.GetBytes(ChatMessage));
 
+            dataStream.AddRange(Encoding.UTF8.GetBytes(":EOM"));
             return dataStream.ToArray();
         }
 

@@ -10,20 +10,23 @@ namespace SimpleChat
     {
         public event MessageEventHandler OnMessageSending;
         public event MessageEventHandler OnError;
-        public Server(IPAddress localIpAddress, int portNumber)
+        private readonly ZTSocket listener;
+        public Server(IPAddress localIpAddress, int portNumber, string nodeId)
         {
 
             LocalIpAddress = localIpAddress;
             PortNumber = portNumber;
+            NodeId = nodeId;
             LocalEndPoint = new IPEndPoint(LocalIpAddress, PortNumber);
-            listener =
-             new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            listener = new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
         public IPEndPoint LocalEndPoint { get; }
         public IPAddress LocalIpAddress { get; }
         public int PortNumber { get; }
-        ZTSocket listener;
+        public string NodeId { get; }
+
+
 
         bool runLoop = true;
         public void Start()
@@ -69,14 +72,16 @@ namespace SimpleChat
             var clientEndpoint = (IPEndPoint)acceptedClient.RemoteEndPoint;
             var clientAddress = IPAddress.Parse(clientEndpoint.Address.ToString());
             string data = string.Empty;
-            var ackMessage = "<|ACK|>:EOM";
+           // var ackMessage = "<|ACK|>:EOM";
+            var ackMesPacket = new MessagePacket() { MessageTypeIdentifier = MessageType.Ack, ChatName = NodeId };
+            var acKMsg = ackMesPacket.GetDataStream();
+            var packet = new MessagePacket();
             try
             {
                 try
                 {
-                    data = acceptedClient.ReceiveMessage();
-                    byte[] msg = Encoding.ASCII.GetBytes(ackMessage);
-                    acceptedClient.Send(msg, 0, msg.Length, SocketFlags.None);
+                     packet = acceptedClient.ReceiveMessagePacket();
+                    acceptedClient.Send(acKMsg, 0, acKMsg.Length, SocketFlags.None);
                     acceptedClient.Shutdown(SocketShutdown.Both);
                     acceptedClient.Close();
                 }
@@ -84,10 +89,10 @@ namespace SimpleChat
                 {
                     OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}, Service Error Code: {e.ServiceErrorCode}, Socket Error Code: {e.SocketErrorCode} ", clientAddress.ToString()));
                 }
-                if (!string.IsNullOrEmpty(data))
+                if (/*!string.IsNullOrEmpty(data)*/ packet.MessageTypeIdentifier!= MessageType.Null)
                 {
 
-                    OnMessageSending?.Invoke(new MessageEventArgs(data, clientAddress.ToString()));
+                    OnMessageSending?.Invoke(new MessageEventArgs(packet.ChatMessage, $"{packet.ChatName}@{clientAddress}"));
                 }
             }
             catch (Exception ex)
