@@ -146,7 +146,7 @@ namespace SimpleChat
 
 
 
-        private  void btnSend_Click(object sender, EventArgs e)
+        private void btnSend_Click(object sender, EventArgs e)
         {
             try
             {
@@ -154,17 +154,15 @@ namespace SimpleChat
                 {
                     _client = new Client(IPAddress.Parse(txtFriendIp.Text), Convert.ToInt32(txtFriendPort.Text));
                     _client.OnError += Client_OnError;
-                    _client.Connect();
+                    _client.OnMessageSending += _client_OnMessageSending;
+
                 }
                 var message = txtMessage.Text;
                 if (!string.IsNullOrEmpty(message))
                 {
-                       var task = Task.Factory.StartNew(() => _client.Send(message));
-                        AddItemToChatList("You: " + message);
-                        txtMessage.Clear();
-                        btnSend.Enabled = false;
-                        Task.WaitAll( task);
-                        btnSend.Enabled = true;
+                    var task = Task.Factory.StartNew(() => _client.Send(message));
+                    AddItemToChatList("You: " + message);
+                    txtMessage.Clear();
                 }
             }
             catch (Exception ex)
@@ -173,15 +171,15 @@ namespace SimpleChat
             }
         }
 
+        private void _client_OnMessageSending(MessageEventArgs e)
+        {
+            DisplayClientMessage(e.Message, e.Sender);
+        }
+
         private void Client_OnError(MessageEventArgs e)
         {
             this.Invoke(new MethodInvoker(() => MessageBox.Show(e.Message)));
         }
-
-        //private void Client_OnMessageSending(MessageEventArgs e)
-        //{
-        //    DisplayClientMessage(e.Message, e.Sender);
-        //}
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -197,6 +195,7 @@ namespace SimpleChat
             if (_client != null)
             {
                 _client.OnError -= Client_OnError;
+                _client.OnMessageSending -= _client_OnMessageSending;
                 _client.Disconnect();
             }
             manager.StopZeroTier();
@@ -207,7 +206,7 @@ namespace SimpleChat
 
             ulong networkId = (ulong)Int64.Parse(networkidstr, System.Globalization.NumberStyles.HexNumber);
             manager.StartZeroTier(networkId);
-          
+
         }
     }
 }

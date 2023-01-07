@@ -7,20 +7,20 @@ namespace SimpleChat
 {
     public class Client
     {
-        // public event MessageEventHandler OnMessageSending;
+        public event MessageEventHandler OnMessageSending;
         public event MessageEventHandler OnError;
         ZTSocket _sender;
-        public Client(IPAddress localIpAddress, int portNumber)
+        public Client(IPAddress remoteIpAddress, int remotePortNumber)
         {
 
-            LocalIpAddress = localIpAddress;
-            PortNumber = portNumber;
-            LocalEndPoint = new IPEndPoint(LocalIpAddress, PortNumber);
+            RemoteIpAddress = remoteIpAddress;
+            PortNumber = remotePortNumber;
+            RemoteEndPoint = new IPEndPoint(RemoteIpAddress, PortNumber);
             // Create a TCP/IP  socket.
             _sender = new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
-        public IPEndPoint LocalEndPoint { get; }
-        public IPAddress LocalIpAddress { get; }
+        public IPEndPoint RemoteEndPoint { get; }
+        public IPAddress RemoteIpAddress { get; }
         public int PortNumber { get; }
         public bool Connect()
         {
@@ -30,11 +30,12 @@ namespace SimpleChat
             }
             try
             {
-                _sender.Connect(LocalEndPoint);
+                if (!_sender.Connected)
+                    _sender.Connect(RemoteEndPoint);
             }
             catch (Exception e)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}", LocalIpAddress.ToString()));
+                OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}", RemoteIpAddress.ToString()));
             }
             return _sender.Connected;
         }
@@ -45,6 +46,7 @@ namespace SimpleChat
                 // Release the socket.
                 _sender.Shutdown(SocketShutdown.Both);
                 _sender.Close();
+                _sender = null;
             }
         }
         public void Send(string message)
@@ -52,34 +54,38 @@ namespace SimpleChat
             // Connect to a remote device.
             try
             {
-                try
-                {
-                    var enc = new ASCIIEncoding();
-                    var msg = enc.GetBytes($"{message}:EOM");
-                    int bytesSent = _sender.Send(msg, 0, msg.Length, SocketFlags.None);
-                    if (bytesSent > 0)
-                    {
-                        var response = _sender.ReceiveMessage();
-                        //if (response == "<|ACK|>")
-                        //{
-                        //    _sender.Close();
-                        //}
-                    }
+                Connect();
+                var enc = new ASCIIEncoding();
+                var msg = enc.GetBytes($"{message}:EOM");
+                int bytesSent = _sender.Send(msg, 0, msg.Length, SocketFlags.None);
 
-                }
-                catch (ArgumentNullException ane)
+                if (bytesSent > 0)
                 {
-                    OnError?.Invoke(new MessageEventArgs($"Error: {ane.Message}", LocalIpAddress.ToString()));
+                    var response = _sender.ReceiveMessage();
+                    if (response == "<|ACK|>")
+                    {
+                        OnMessageSending?.Invoke(new MessageEventArgs($"Ack received", RemoteEndPoint.ToString()));
+                    }
                 }
-                catch (ZTSockets.SocketException e)
+                else
                 {
-                    OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}, Service Error Code: {e.ServiceErrorCode}, Socket Error Code: {e.SocketErrorCode} ", LocalIpAddress.ToString()));
+                    OnMessageSending?.Invoke(new MessageEventArgs($"Ack not received", RemoteEndPoint.ToString()));
                 }
+                Disconnect();
+            }
+            catch (ArgumentNullException ane)
+            {
+                OnError?.Invoke(new MessageEventArgs($"Error: {ane.Message}", RemoteIpAddress.ToString()));
+            }
+            catch (ZTSockets.SocketException e)
+            {
+                OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}, Service Error Code: {e.ServiceErrorCode}, Socket Error Code: {e.SocketErrorCode} ", RemoteIpAddress.ToString()));
             }
             catch (Exception ex)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {ex.Message}", LocalIpAddress.ToString()));
+                OnError?.Invoke(new MessageEventArgs($"Error: {ex.Message}", RemoteIpAddress.ToString()));
             }
+
         }
     }
 }

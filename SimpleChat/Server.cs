@@ -16,6 +16,8 @@ namespace SimpleChat
             LocalIpAddress = localIpAddress;
             PortNumber = portNumber;
             LocalEndPoint = new IPEndPoint(LocalIpAddress, PortNumber);
+            listener =
+             new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
         public IPEndPoint LocalEndPoint { get; }
@@ -26,8 +28,7 @@ namespace SimpleChat
         bool runLoop = true;
         public void Start()
         {
-            listener =
-               new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
 
             // Bind the socket to the local endpoint and
             // listen for incoming connections.
@@ -35,11 +36,12 @@ namespace SimpleChat
             try
             {
                 listener.Bind(LocalEndPoint);
-                listener.Listen(10);
+                listener.Listen(100);
                 while (runLoop)
                 {
                     var xclient = listener.Accept();
-                    HandleClient(xclient);
+                    var task = Task.Factory.StartNew(() => HandleClient(xclient));
+                    task.Wait();
                 }
 
             }
@@ -74,7 +76,9 @@ namespace SimpleChat
                 {
                     data = acceptedClient.ReceiveMessage();
                     byte[] msg = Encoding.ASCII.GetBytes(ackMessage);
-                    acceptedClient.Send(msg);
+                    acceptedClient.Send(msg, 0, msg.Length, SocketFlags.None);
+                    acceptedClient.Shutdown(SocketShutdown.Both);
+                    acceptedClient.Close();
                 }
                 catch (ZTSockets.SocketException e)
                 {
