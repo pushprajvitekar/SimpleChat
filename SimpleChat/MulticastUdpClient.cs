@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using ZTSockets =ZeroTier.Sockets;
+using ZTSockets = ZeroTier.Sockets;
 
 namespace SimpleChat
 {
@@ -18,18 +18,16 @@ namespace SimpleChat
     /// </summary>
     public class MulticastUdpClient
     {
-        UdpClient _udpclient;
-        int _port;
-        IPAddress _multicastIPaddress;
-        IPAddress _localIPaddress;
-        IPEndPoint _localEndPoint;
-        IPEndPoint _remoteEndPoint;
+        private readonly UdpClient _udpclient;
+        private readonly IPAddress _multicastIPaddress;
+        private readonly IPAddress _localIPaddress;
+        private readonly IPEndPoint _localEndPoint;
+        private readonly IPEndPoint _remoteEndPoint;
 
         public MulticastUdpClient(IPAddress multicastIPaddress, int port, IPAddress localIPaddress = null)
         {
             // Store params
             _multicastIPaddress = multicastIPaddress;
-            _port = port;
             _localIPaddress = localIPaddress;
             if (localIPaddress == null)
                 _localIPaddress = IPAddress.Any;
@@ -55,16 +53,20 @@ namespace SimpleChat
         bool _leaving = false;
         public void LeaveMulticastGroup(string sender)
         {
-            var msg = new MessagePacket() { ChatMessage = "Leaving", ChatName = sender , MessageTypeIdentifier = MessageType.Exit };
+            var names = sender.Split("@").ToList();
+            var nodeid = names.First();
+            var ipaddr = names.Last().Split(":").ToList();
+            var port = Convert.ToInt32(ipaddr.Last());
+            var msg = new UdpPacket() { IpAddress = ipaddr.First(), NodeId = nodeid, Port = port, MessageTypeIdentifier = MessageType.Exit };
             SendMulticast(msg.GetDataStream());
             _leaving = true;
             _udpclient.DropMulticastGroup(_multicastIPaddress);
         }
-    /// <summary>
-    /// Send the buffer by UDP to multicast address
-    /// </summary>
-    /// <param name="bufferToSend"></param>
-    public void SendMulticast(byte[] bufferToSend)
+        /// <summary>
+        /// Send the buffer by UDP to multicast address
+        /// </summary>
+        /// <param name="bufferToSend"></param>
+        public void SendMulticast(byte[] bufferToSend)
         {
             _udpclient.Send(bufferToSend, bufferToSend.Length, _remoteEndPoint);
         }
@@ -76,12 +78,18 @@ namespace SimpleChat
         private void ReceivedCallback(IAsyncResult ar)
         {
             // Get received data
-            IPEndPoint sender = new IPEndPoint(0, 0);
+            IPEndPoint? sender = new IPEndPoint(0, 0);
             Byte[] receivedBytes = _udpclient.EndReceive(ar, ref sender);
 
             // fire event if defined
             if (UdpMessageReceived != null)
-                UdpMessageReceived(this, new UdpMessageReceivedEventArgs() { Buffer = receivedBytes });
+            {
+                var msg = new UdpPacket(receivedBytes);
+                if (msg.MessageTypeIdentifier != MessageType.Null)
+                {
+                    UdpMessageReceived(this, new UdpMessageReceivedEventArgs() { Buffer = receivedBytes, IPAddress = msg.IpAddress, NodeId = msg.NodeId, Port = msg.Port, MessageType = msg.MessageTypeIdentifier });
+                }
+            }
             if (_leaving)
             {
                 _udpclient.Client.Shutdown(SocketShutdown.Both);
@@ -104,8 +112,13 @@ namespace SimpleChat
         /// </summary>
         public class UdpMessageReceivedEventArgs : EventArgs
         {
+            public string IPAddress { get; set; }
+            public int Port { get; set; }
+            public string NodeId { get; set; }
             public string Sender { get; set; }
             public byte[] Buffer { get; set; }
+
+            public MessageType MessageType { get; set; }
         }
 
     }

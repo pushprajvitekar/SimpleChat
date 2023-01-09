@@ -35,7 +35,7 @@ namespace SimpleChat
     {
         // ZeroTier Node instance
 
-        readonly Node node;
+         Node node;
         ulong _networkId = 0;
         public delegate void ZeroTierManagerMessageHandler(object sender, ZeroTierManagerMessageEventArgs e);
         public event ZeroTierManagerMessageHandler MessageReceivedEvent;
@@ -154,7 +154,10 @@ namespace SimpleChat
          */
         public void StopZeroTier()
         {
+            node.Stop();
             node.Free();
+            node.Leave(_networkId);
+            node = null;
         }
 
         /**

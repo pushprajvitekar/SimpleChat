@@ -1,23 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 
 namespace SimpleChat
 {
-    public class MessageEventArgs : EventArgs
+    public class ErrorMessageEventArgs : EventArgs
     {
-
         public string Message { get; protected set; }
-        public string Sender { get; protected set; }
-        public MessageType MessageType { get; }
-
-        public MessageEventArgs(string message, string sender, MessageType messageType = MessageType.Message)
+        public string Sender => SenderIpAddress != null ? SenderIpAddress.ToString() : string.Empty;
+        public IPAddress SenderIpAddress { get; protected set; }
+        public ErrorMessageEventArgs(string message, IPAddress sender)
         {
             Message = message;
-            Sender = sender;
-            MessageType = messageType;
+            SenderIpAddress = sender;
+        }
+    }
+
+    public delegate void ErrorEventHandler(ErrorMessageEventArgs e);
+
+    public class SocketErrorMessageEventArgs : ErrorMessageEventArgs
+    {
+
+        public int SocketErrorCode { get; protected set; }
+        public int ServiceErrorCode { get; protected set; }
+        public SocketErrorMessageEventArgs(string message, IPAddress sender, int serviceErrorCode, int socketErrorCode) : base(message, sender)
+        {
+            ServiceErrorCode = serviceErrorCode;
+            SocketErrorCode = socketErrorCode;
+            Message = $"{Message}, Service error code: {ServiceErrorCode}, Socket error code: {SocketErrorCode}";
+        }
+    }
+    public delegate void SocketErrorEventHandler(SocketErrorMessageEventArgs e);
+    public class MessageEventArgs : EventArgs
+    {
+        public string Message { get; protected set; }
+        public string Sender => SenderIpAddress != null ? SenderIpAddress.ToString() : string.Empty;
+        public IPAddress SenderIpAddress { get; protected set; }
+        public MessageType MessageType { get; }
+        public string NodeId { get; set; }
+        public string SenderName => $"{NodeId}";
+        public MessageEventArgs(string message, IPAddress sender, string nodeId)
+        {
+            Message = message;
+            SenderIpAddress = sender;
+            NodeId = nodeId;
         }
     }
     public delegate void MessageEventHandler(MessageEventArgs e);

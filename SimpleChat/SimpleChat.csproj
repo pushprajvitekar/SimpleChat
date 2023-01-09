@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ClientDiscovery.cs" />
     <Compile Remove="FrmTest.cs" />
     <Compile Remove="FrmTest.Designer.cs" />
     <Compile Remove="Listener.cs" />

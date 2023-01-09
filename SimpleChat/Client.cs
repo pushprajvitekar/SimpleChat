@@ -7,7 +7,8 @@ namespace SimpleChat
     public class Client
     {
         public event MessageEventHandler OnMessageSending;
-        public event MessageEventHandler OnError;
+        public event ErrorEventHandler OnError;
+        public event SocketErrorEventHandler OnSocketError;
         ZTSocket _sender;
         public Client(IPAddress remoteIpAddress, int remotePortNumber, string nodeId)
         {
@@ -17,11 +18,11 @@ namespace SimpleChat
             RemoteEndPoint = new IPEndPoint(RemoteIpAddress, PortNumber);
             // Create a TCP/IP  socket.
             _sender = new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        //    _sender.SendTimeout = 50;
-         //   _sender.ReceiveTimeout = 50;
+            //    _sender.SendTimeout = 50;
+            //   _sender.ReceiveTimeout = 50;
             NodeId = nodeId;
         }
-        public string  NodeId { get; set; }
+        public string NodeId { get; set; }
         public IPEndPoint RemoteEndPoint { get; }
         public IPAddress RemoteIpAddress { get; }
         public int PortNumber { get; }
@@ -38,7 +39,7 @@ namespace SimpleChat
             }
             catch (Exception e)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}", RemoteIpAddress.ToString()));
+                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {e.Message}", RemoteIpAddress));
             }
             return _sender.Connected;
         }
@@ -72,7 +73,7 @@ namespace SimpleChat
                 // Get packet as byte array
                 byte[] byteData = sendData.GetDataStream();
 
-               // var socketFlag = messageType == MessageType.Message ? SocketFlags.None : SocketFlags.Broadcast;
+                // var socketFlag = messageType == MessageType.Message ? SocketFlags.None : SocketFlags.Broadcast;
                 int bytesSent = _sender.Send(byteData, 0, byteData.Length, SocketFlags.None);
 
                 if (bytesSent > 0)
@@ -80,26 +81,26 @@ namespace SimpleChat
                     var response = _sender.ReceiveMessagePacket();
                     if (response.MessageTypeIdentifier == MessageType.Ack)
                     {
-                        OnMessageSending?.Invoke(new MessageEventArgs($"Ack received", RemoteEndPoint.ToString()));
+                        OnMessageSending?.Invoke(new MessageEventArgs($"Ack received", RemoteIpAddress, response.ChatName));
                     }
                 }
                 else
                 {
-                    OnMessageSending?.Invoke(new MessageEventArgs($"Ack not received", RemoteEndPoint.ToString()));
+                    OnMessageSending?.Invoke(new MessageEventArgs($"Ack not received", RemoteIpAddress, string.Empty));
                 }
                 Disconnect();
             }
             catch (ArgumentNullException ane)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {ane.Message}", RemoteIpAddress.ToString()));
+                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {ane.Message}", RemoteIpAddress));
             }
             catch (ZTSockets.SocketException e)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}, Service Error Code: {e.ServiceErrorCode}, Socket Error Code: {e.SocketErrorCode} ", RemoteIpAddress.ToString()));
+                OnSocketError?.Invoke(new SocketErrorMessageEventArgs($"Error: {e.Message}", RemoteIpAddress, e.ServiceErrorCode, e.SocketErrorCode));
             }
             catch (Exception ex)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {ex.Message}", RemoteIpAddress.ToString()));
+                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {ex.Message}", RemoteIpAddress));
             }
 
         }

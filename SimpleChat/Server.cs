@@ -1,15 +1,15 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using ZTSockets = ZeroTier.Sockets;
 using ZTSocket = ZeroTier.Sockets.Socket;
+using ZTSockets = ZeroTier.Sockets;
 
 namespace SimpleChat
 {
     public class Server
     {
         public event MessageEventHandler OnMessageSending;
-        public event MessageEventHandler OnError;
+        public event ErrorEventHandler OnError;
+        public event SocketErrorEventHandler OnSocketError;
         private readonly ZTSocket listener;
         public Server(IPAddress localIpAddress, int portNumber, string nodeId)
         {
@@ -50,11 +50,11 @@ namespace SimpleChat
             }
             catch (ZTSockets.SocketException e)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}, Service Error Code: {e.ServiceErrorCode}, Socket Error Code: {e.SocketErrorCode} ", LocalIpAddress.ToString()));
+                OnSocketError?.Invoke(new SocketErrorMessageEventArgs($"Error: {e.Message}", LocalIpAddress, e.ServiceErrorCode, e.SocketErrorCode));
             }
             catch (Exception ex)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {ex.Message}", LocalIpAddress.ToString()));
+                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {ex.Message}", LocalIpAddress));
             }
         }
         public void Stop()
@@ -72,7 +72,6 @@ namespace SimpleChat
             var clientEndpoint = (IPEndPoint)acceptedClient.RemoteEndPoint;
             var clientAddress = IPAddress.Parse(clientEndpoint.Address.ToString());
             string data = string.Empty;
-           // var ackMessage = "<|ACK|>:EOM";
             var ackMesPacket = new MessagePacket() { MessageTypeIdentifier = MessageType.Ack, ChatName = NodeId };
             var acKMsg = ackMesPacket.GetDataStream();
             var packet = new MessagePacket();
@@ -80,24 +79,24 @@ namespace SimpleChat
             {
                 try
                 {
-                     packet = acceptedClient.ReceiveMessagePacket();
+                    packet = acceptedClient.ReceiveMessagePacket();
                     acceptedClient.Send(acKMsg, 0, acKMsg.Length, SocketFlags.None);
                     acceptedClient.Shutdown(SocketShutdown.Both);
                     acceptedClient.Close();
                 }
                 catch (ZTSockets.SocketException e)
                 {
-                    OnError?.Invoke(new MessageEventArgs($"Error: {e.Message}, Service Error Code: {e.ServiceErrorCode}, Socket Error Code: {e.SocketErrorCode} ", clientAddress.ToString()));
+                    OnSocketError?.Invoke(new SocketErrorMessageEventArgs($"Error: {e.Message}" ,clientAddress,e.ServiceErrorCode, e.SocketErrorCode));
                 }
-                if (/*!string.IsNullOrEmpty(data)*/ packet.MessageTypeIdentifier!= MessageType.Null)
+                if (packet.MessageTypeIdentifier != MessageType.Null)
                 {
 
-                    OnMessageSending?.Invoke(new MessageEventArgs(packet.ChatMessage, $"{packet.ChatName}@{clientAddress}", packet.MessageTypeIdentifier));
+                    OnMessageSending?.Invoke(new MessageEventArgs(packet.ChatMessage,clientAddress, $"{packet.ChatName}"));
                 }
             }
             catch (Exception ex)
             {
-                OnError?.Invoke(new MessageEventArgs($"Error: {ex.Message}", clientAddress.ToString()));
+                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {ex.Message}", clientAddress));
             }
         }
 

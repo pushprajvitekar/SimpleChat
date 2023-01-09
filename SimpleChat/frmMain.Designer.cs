@@ -42,28 +42,31 @@
             this.btnInitNetwork = new System.Windows.Forms.Button();
             this.lstboxChat = new System.Windows.Forms.ListBox();
             this.lstBoxPeers = new System.Windows.Forms.ListBox();
-            this.button1btnStartUdpClient = new System.Windows.Forms.Button();
-            this.btnSendUdpMessage = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.lblMyNodeId = new System.Windows.Forms.Label();
+            this.lblFriendNodeId = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // txtMyIp
             // 
-            this.txtMyIp.Location = new System.Drawing.Point(132, 51);
+            this.txtMyIp.Location = new System.Drawing.Point(173, 49);
             this.txtMyIp.Name = "txtMyIp";
             this.txtMyIp.Size = new System.Drawing.Size(100, 23);
             this.txtMyIp.TabIndex = 0;
             // 
             // txtMyPort
             // 
-            this.txtMyPort.Location = new System.Drawing.Point(318, 51);
+            this.txtMyPort.Location = new System.Drawing.Point(366, 49);
             this.txtMyPort.Name = "txtMyPort";
-            this.txtMyPort.Size = new System.Drawing.Size(100, 23);
+            this.txtMyPort.Size = new System.Drawing.Size(58, 23);
             this.txtMyPort.TabIndex = 1;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(65, 54);
+            this.label1.Location = new System.Drawing.Point(114, 52);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(37, 15);
             this.label1.TabIndex = 2;
@@ -72,7 +75,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(247, 51);
+            this.label2.Location = new System.Drawing.Point(295, 52);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(49, 15);
             this.label2.TabIndex = 3;
@@ -81,7 +84,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(247, 111);
+            this.label3.Location = new System.Drawing.Point(295, 81);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(65, 15);
             this.label3.TabIndex = 7;
@@ -90,7 +93,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(64, 109);
+            this.label4.Location = new System.Drawing.Point(114, 82);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(53, 15);
             this.label4.TabIndex = 6;
@@ -98,14 +101,14 @@
             // 
             // txtFriendPort
             // 
-            this.txtFriendPort.Location = new System.Drawing.Point(318, 106);
+            this.txtFriendPort.Location = new System.Drawing.Point(366, 79);
             this.txtFriendPort.Name = "txtFriendPort";
-            this.txtFriendPort.Size = new System.Drawing.Size(100, 23);
+            this.txtFriendPort.Size = new System.Drawing.Size(58, 23);
             this.txtFriendPort.TabIndex = 5;
             // 
             // txtFriendIp
             // 
-            this.txtFriendIp.Location = new System.Drawing.Point(132, 106);
+            this.txtFriendIp.Location = new System.Drawing.Point(173, 79);
             this.txtFriendIp.Name = "txtFriendIp";
             this.txtFriendIp.Size = new System.Drawing.Size(100, 23);
             this.txtFriendIp.TabIndex = 4;
@@ -113,15 +116,16 @@
             // lstBoxMessages
             // 
             this.lstBoxMessages.FormattingEnabled = true;
+            this.lstBoxMessages.HorizontalScrollbar = true;
             this.lstBoxMessages.ItemHeight = 15;
-            this.lstBoxMessages.Location = new System.Drawing.Point(65, 140);
+            this.lstBoxMessages.Location = new System.Drawing.Point(430, 25);
             this.lstBoxMessages.Name = "lstBoxMessages";
-            this.lstBoxMessages.Size = new System.Drawing.Size(414, 94);
+            this.lstBoxMessages.Size = new System.Drawing.Size(387, 94);
             this.lstBoxMessages.TabIndex = 8;
             // 
             // txtMessage
             // 
-            this.txtMessage.Location = new System.Drawing.Point(64, 240);
+            this.txtMessage.Location = new System.Drawing.Point(12, 291);
             this.txtMessage.Multiline = true;
             this.txtMessage.Name = "txtMessage";
             this.txtMessage.Size = new System.Drawing.Size(333, 50);
@@ -129,7 +133,7 @@
             // 
             // btnSend
             // 
-            this.btnSend.Location = new System.Drawing.Point(403, 257);
+            this.btnSend.Location = new System.Drawing.Point(349, 318);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(75, 23);
             this.btnSend.TabIndex = 11;
@@ -139,11 +143,11 @@
             // 
             // btnInitNetwork
             // 
-            this.btnInitNetwork.Location = new System.Drawing.Point(64, 12);
+            this.btnInitNetwork.Location = new System.Drawing.Point(12, 3);
             this.btnInitNetwork.Name = "btnInitNetwork";
             this.btnInitNetwork.Size = new System.Drawing.Size(161, 23);
             this.btnInitNetwork.TabIndex = 12;
-            this.btnInitNetwork.Text = "Enter Network";
+            this.btnInitNetwork.Text = "Connect";
             this.btnInitNetwork.UseVisualStyleBackColor = true;
             this.btnInitNetwork.Click += new System.EventHandler(this.btnInitNetwork_Click);
             // 
@@ -151,48 +155,77 @@
             // 
             this.lstboxChat.FormattingEnabled = true;
             this.lstboxChat.ItemHeight = 15;
-            this.lstboxChat.Location = new System.Drawing.Point(66, 302);
+            this.lstboxChat.Location = new System.Drawing.Point(12, 142);
             this.lstboxChat.Name = "lstboxChat";
-            this.lstboxChat.Size = new System.Drawing.Size(412, 124);
+            this.lstboxChat.Size = new System.Drawing.Size(412, 139);
             this.lstboxChat.TabIndex = 13;
             // 
             // lstBoxPeers
             // 
+            this.lstBoxPeers.DisplayMember = "NodeId";
             this.lstBoxPeers.FormattingEnabled = true;
             this.lstBoxPeers.ItemHeight = 15;
-            this.lstBoxPeers.Location = new System.Drawing.Point(585, 25);
+            this.lstBoxPeers.Location = new System.Drawing.Point(430, 142);
             this.lstBoxPeers.Name = "lstBoxPeers";
-            this.lstBoxPeers.Size = new System.Drawing.Size(183, 79);
+            this.lstBoxPeers.Size = new System.Drawing.Size(372, 199);
             this.lstBoxPeers.TabIndex = 14;
             this.lstBoxPeers.SelectedIndexChanged += new System.EventHandler(this.lstBoxPeers_SelectedIndexChanged);
             // 
-            // button1btnStartUdpClient
+            // label5
             // 
-            this.button1btnStartUdpClient.Location = new System.Drawing.Point(307, 14);
-            this.button1btnStartUdpClient.Name = "button1btnStartUdpClient";
-            this.button1btnStartUdpClient.Size = new System.Drawing.Size(75, 23);
-            this.button1btnStartUdpClient.TabIndex = 15;
-            this.button1btnStartUdpClient.Text = "Start udp client";
-            this.button1btnStartUdpClient.UseVisualStyleBackColor = true;
-            this.button1btnStartUdpClient.Click += new System.EventHandler(this.btnStartUdpClient_Click);
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(430, 3);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(27, 15);
+            this.label5.TabIndex = 16;
+            this.label5.Text = "Log";
             // 
-            // btnSendUdpMessage
+            // label6
             // 
-            this.btnSendUdpMessage.Location = new System.Drawing.Point(415, 18);
-            this.btnSendUdpMessage.Name = "btnSendUdpMessage";
-            this.btnSendUdpMessage.Size = new System.Drawing.Size(75, 23);
-            this.btnSendUdpMessage.TabIndex = 16;
-            this.btnSendUdpMessage.Text = "Send Udp";
-            this.btnSendUdpMessage.UseVisualStyleBackColor = true;
-            this.btnSendUdpMessage.Click += new System.EventHandler(this.btnSendUdpMessage_Click);
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(430, 124);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(45, 15);
+            this.label6.TabIndex = 17;
+            this.label6.Text = "Friends";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(12, 124);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(73, 15);
+            this.label7.TabIndex = 18;
+            this.label7.Text = "Chat History";
+            // 
+            // lblMyNodeId
+            // 
+            this.lblMyNodeId.AutoSize = true;
+            this.lblMyNodeId.Location = new System.Drawing.Point(12, 49);
+            this.lblMyNodeId.Name = "lblMyNodeId";
+            this.lblMyNodeId.Size = new System.Drawing.Size(66, 15);
+            this.lblMyNodeId.TabIndex = 19;
+            this.lblMyNodeId.Text = "My NodeId";
+            // 
+            // lblFriendNodeId
+            // 
+            this.lblFriendNodeId.AutoSize = true;
+            this.lblFriendNodeId.Location = new System.Drawing.Point(12, 81);
+            this.lblFriendNodeId.Name = "lblFriendNodeId";
+            this.lblFriendNodeId.Size = new System.Drawing.Size(49, 15);
+            this.lblFriendNodeId.TabIndex = 20;
+            this.lblFriendNodeId.Text = " NodeId";
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.btnSendUdpMessage);
-            this.Controls.Add(this.button1btnStartUdpClient);
+            this.ClientSize = new System.Drawing.Size(820, 375);
+            this.Controls.Add(this.lblFriendNodeId);
+            this.Controls.Add(this.lblMyNodeId);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.lstBoxPeers);
             this.Controls.Add(this.lstboxChat);
             this.Controls.Add(this.btnInitNetwork);
@@ -207,6 +240,8 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtMyPort);
             this.Controls.Add(this.txtMyIp);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "frmMain";
             this.Text = "Simple Chat";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
@@ -232,7 +267,10 @@
         private Button btnInitNetwork;
         private ListBox lstboxChat;
         private ListBox lstBoxPeers;
-        private Button button1btnStartUdpClient;
-        private Button btnSendUdpMessage;
+        private Label label5;
+        private Label label6;
+        private Label label7;
+        private Label lblMyNodeId;
+        private Label lblFriendNodeId;
     }
 }
