@@ -8,12 +8,16 @@ namespace SimpleChat
 {
     public class MessageEventArgs : EventArgs
     {
+
         public string Message { get; protected set; }
         public string Sender { get; protected set; }
-        public MessageEventArgs(string message, string sender)
+        public MessageType MessageType { get; }
+
+        public MessageEventArgs(string message, string sender, MessageType messageType = MessageType.Message)
         {
             Message = message;
             Sender = sender;
+            MessageType = messageType;
         }
     }
     public delegate void MessageEventHandler(MessageEventArgs e);

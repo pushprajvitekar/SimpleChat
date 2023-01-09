@@ -92,7 +92,7 @@ namespace SimpleChat
                 if (/*!string.IsNullOrEmpty(data)*/ packet.MessageTypeIdentifier!= MessageType.Null)
                 {
 
-                    OnMessageSending?.Invoke(new MessageEventArgs(packet.ChatMessage, $"{packet.ChatName}@{clientAddress}"));
+                    OnMessageSending?.Invoke(new MessageEventArgs(packet.ChatMessage, $"{packet.ChatName}@{clientAddress}", packet.MessageTypeIdentifier));
                 }
             }
             catch (Exception ex)

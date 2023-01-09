@@ -38,11 +38,12 @@
             this.txtFriendIp = new System.Windows.Forms.TextBox();
             this.lstBoxMessages = new System.Windows.Forms.ListBox();
             this.txtMessage = new System.Windows.Forms.TextBox();
-            this.btnStart = new System.Windows.Forms.Button();
             this.btnSend = new System.Windows.Forms.Button();
             this.btnInitNetwork = new System.Windows.Forms.Button();
             this.lstboxChat = new System.Windows.Forms.ListBox();
             this.lstBoxPeers = new System.Windows.Forms.ListBox();
+            this.button1btnStartUdpClient = new System.Windows.Forms.Button();
+            this.btnSendUdpMessage = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // txtMyIp
@@ -126,16 +127,6 @@
             this.txtMessage.Size = new System.Drawing.Size(333, 50);
             this.txtMessage.TabIndex = 9;
             // 
-            // btnStart
-            // 
-            this.btnStart.Location = new System.Drawing.Point(439, 51);
-            this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(75, 23);
-            this.btnStart.TabIndex = 10;
-            this.btnStart.Text = "Start";
-            this.btnStart.UseVisualStyleBackColor = true;
-            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
-            // 
             // btnSend
             // 
             this.btnSend.Location = new System.Drawing.Point(403, 257);
@@ -171,19 +162,41 @@
             this.lstBoxPeers.ItemHeight = 15;
             this.lstBoxPeers.Location = new System.Drawing.Point(585, 25);
             this.lstBoxPeers.Name = "lstBoxPeers";
-            this.lstBoxPeers.Size = new System.Drawing.Size(183, 394);
+            this.lstBoxPeers.Size = new System.Drawing.Size(183, 79);
             this.lstBoxPeers.TabIndex = 14;
+            this.lstBoxPeers.SelectedIndexChanged += new System.EventHandler(this.lstBoxPeers_SelectedIndexChanged);
+            // 
+            // button1btnStartUdpClient
+            // 
+            this.button1btnStartUdpClient.Location = new System.Drawing.Point(307, 14);
+            this.button1btnStartUdpClient.Name = "button1btnStartUdpClient";
+            this.button1btnStartUdpClient.Size = new System.Drawing.Size(75, 23);
+            this.button1btnStartUdpClient.TabIndex = 15;
+            this.button1btnStartUdpClient.Text = "Start udp client";
+            this.button1btnStartUdpClient.UseVisualStyleBackColor = true;
+            this.button1btnStartUdpClient.Click += new System.EventHandler(this.btnStartUdpClient_Click);
+            // 
+            // btnSendUdpMessage
+            // 
+            this.btnSendUdpMessage.Location = new System.Drawing.Point(415, 18);
+            this.btnSendUdpMessage.Name = "btnSendUdpMessage";
+            this.btnSendUdpMessage.Size = new System.Drawing.Size(75, 23);
+            this.btnSendUdpMessage.TabIndex = 16;
+            this.btnSendUdpMessage.Text = "Send Udp";
+            this.btnSendUdpMessage.UseVisualStyleBackColor = true;
+            this.btnSendUdpMessage.Click += new System.EventHandler(this.btnSendUdpMessage_Click);
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnSendUdpMessage);
+            this.Controls.Add(this.button1btnStartUdpClient);
             this.Controls.Add(this.lstBoxPeers);
             this.Controls.Add(this.lstboxChat);
             this.Controls.Add(this.btnInitNetwork);
             this.Controls.Add(this.btnSend);
-            this.Controls.Add(this.btnStart);
             this.Controls.Add(this.txtMessage);
             this.Controls.Add(this.lstBoxMessages);
             this.Controls.Add(this.label3);
@@ -215,10 +228,11 @@
         private TextBox txtFriendIp;
         private ListBox lstBoxMessages;
         private TextBox txtMessage;
-        private Button btnStart;
         private Button btnSend;
         private Button btnInitNetwork;
         private ListBox lstboxChat;
         private ListBox lstBoxPeers;
+        private Button button1btnStartUdpClient;
+        private Button btnSendUdpMessage;
     }
 }

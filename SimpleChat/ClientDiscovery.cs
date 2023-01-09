@@ -8,12 +8,18 @@ using System.Threading.Tasks;
 
 namespace SimpleChat
 {
-    internal class ClientDicovery
+    internal class ClientDiscovery
     {
-        public ClientDicovery()
+        public ClientDiscovery(IPAddress myIpAddress, string myNodeId)
         {
+            MyIpAddress = myIpAddress;
+            MyNodeId = myNodeId;
         }
         bool _stopListening = false;
+
+        public IPAddress MyIpAddress { get; }
+        public string MyNodeId { get; }
+
         public void StartListening()
         {
             //var Server = new UdpClient(8888);
@@ -59,6 +65,43 @@ namespace SimpleChat
             Console.WriteLine("Recived {0} from {1}", ServerResponse, ServerEp.Address.ToString());
 
             Client.Close();
+        }
+        //public void DiscoverMe()
+        //{
+        //    var remotePort = 50001;
+        //    for (int i = 1; i <= 255; i++)
+        //    {
+        //        var remoteIp = $"10.10.12.{i}";
+        //        IPAddress broadcast = IPAddress.Parse(remoteIp);
+        //        var Client = new Client(broadcast, remotePort, MyNodeId);
+        //        Client.Send("Discover me", MessageType.Enter);
+        //    }
+
+        //}
+
+        //public void Leaving()
+        //{
+        //    IPAddress broadcast = IPAddress.Parse("10.10.12.255");
+        //    var Client = new Client(broadcast, 50001, MyNodeId);
+        //    Client.Send("Leaving", MessageType.Exit);
+        //}
+
+        public async Task Run(TimeSpan period, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(period, cancellationToken);
+
+                if (!cancellationToken.IsCancellationRequested)
+                    DiscoverMe();
+                //else
+                //    Leaving();
+            }
+        }
+
+        public Task SendDiscoverMessagePeriodically(TimeSpan period, CancellationToken cancellationToken)
+        {
+            return Run(period, cancellationToken);
         }
 
     }

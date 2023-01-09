@@ -17,6 +17,8 @@ namespace SimpleChat
             RemoteEndPoint = new IPEndPoint(RemoteIpAddress, PortNumber);
             // Create a TCP/IP  socket.
             _sender = new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        //    _sender.SendTimeout = 50;
+         //   _sender.ReceiveTimeout = 50;
             NodeId = nodeId;
         }
         public string  NodeId { get; set; }
@@ -52,7 +54,7 @@ namespace SimpleChat
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             }
         }
-        public void Send(string message)
+        public void Send(string message, MessageType messageType = MessageType.Message)
         {
             // Connect to a remote device.
             try
@@ -64,13 +66,13 @@ namespace SimpleChat
                 {
                     ChatName = NodeId,
                     ChatMessage = message,
-                    MessageTypeIdentifier = MessageType.Message
+                    MessageTypeIdentifier = messageType
                 };
 
                 // Get packet as byte array
                 byte[] byteData = sendData.GetDataStream();
 
-              
+               // var socketFlag = messageType == MessageType.Message ? SocketFlags.None : SocketFlags.Broadcast;
                 int bytesSent = _sender.Send(byteData, 0, byteData.Length, SocketFlags.None);
 
                 if (bytesSent > 0)

@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text;
+using System.Threading;
 
 namespace SimpleChat
 {
@@ -25,8 +27,7 @@ namespace SimpleChat
                 if (recvdIp != _myIpAddress)
                 {
                     _myIpAddress = e.IPAddresses.First();
-                    this.Invoke(new MethodInvoker(() => txtMyIp.Text = _myIpAddress.ToString()));
-                    this.Invoke(new MethodInvoker(() => btnStart_Click(this, new EventArgs())));
+                    this.Invoke(new MethodInvoker(() => OnNetworkAuthenticated()));
                     _myNodeId = manager.NodeId;
                 }
             }
@@ -63,10 +64,29 @@ namespace SimpleChat
         {
             this.Invoke(new MethodInvoker(() => lstboxChat.Items.Add(message)));
         }
-        //private void AddItemToPeerList(string peerName)
-        //{
-        //    this.Invoke(new MethodInvoker(() => lstBoxPeers.Items.Add(peerName)));
-        //}
+        private void AddItemToPeerList(string peerName)
+        {
+            this.Invoke(new MethodInvoker(() =>
+            {
+                if (!lstBoxPeers.Items.Contains(peerName))
+                {
+                    lstBoxPeers.Items.Add(peerName);
+                }
+            }
+            ));
+        }
+
+        private void RemoveItemToPeerList(string peerName)
+        {
+            this.Invoke(new MethodInvoker(() =>
+            {
+                if (lstBoxPeers.Items.Contains(peerName))
+                {
+                    lstBoxPeers.Items.Remove(peerName);
+                }
+            }
+             ));
+        }
         private void frmMain_Load(object sender, EventArgs e)
         {
             manager = new ZeroTierNodeManager();
@@ -91,11 +111,12 @@ namespace SimpleChat
         //    }
         //    return "127.0.0.1";
         //}
-
-        private void btnStart_Click(object sender, EventArgs e)
+        CancellationTokenSource ts = new CancellationTokenSource();
+        private  void OnNetworkAuthenticated()
         {
             try
             {
+                txtMyIp.Text = _myIpAddress.ToString();
                 var epLocal = new IPEndPoint(IPAddress.Parse(txtMyIp.Text),
                  Convert.ToInt32(txtMyPort.Text));
                 if (_listener != null)
@@ -107,12 +128,18 @@ namespace SimpleChat
                 _listener = new Server(IPAddress.Parse(txtMyIp.Text), Convert.ToInt32(txtMyPort.Text), _myNodeId);
                 _listener.OnMessageSending += Server_OnMessageSending;
                 _listener.OnError += Server_OnError; ;
-                Task.Factory.StartNew(_listener.Start, TaskCreationOptions.LongRunning);
+                _ = Task.Factory.StartNew(_listener.Start, TaskCreationOptions.LongRunning);
 
+
+
+                CancellationToken ct = ts.Token;
+               
+                StartUdpListener();
+                _ = RunInBackground(ct);
                 // release button to send message
                 btnSend.Enabled = true;
-                btnStart.Text = "Connected";
-                btnStart.Enabled = false;
+                btnInitNetwork.Text = "Connected";
+                btnInitNetwork.Enabled = false;
                 txtMessage.Focus();
 
 
@@ -123,6 +150,15 @@ namespace SimpleChat
             }
         }
 
+        private async Task RunInBackground(CancellationToken ct)
+        {
+            var periodicTime = new PeriodicTimer(TimeSpan.FromSeconds(5));
+            while (await periodicTime.WaitForNextTickAsync(ct))
+            {
+                SendAddMeMessage();
+            }
+        }
+
         private void Server_OnError(MessageEventArgs e)
         {
             this.Invoke(new MethodInvoker(() => MessageBox.Show(e.Message)));
@@ -130,7 +166,19 @@ namespace SimpleChat
 
         private void Server_OnMessageSending(MessageEventArgs e)
         {
-            DisplayClientMessage(e.Message, e.Sender);
+            switch (e.MessageType)
+            {
+                case MessageType.Message:
+                    DisplayClientMessage(e.Message, e.Sender);
+                    break;
+                case MessageType.Enter:
+                    AddItemToPeerList(e.Sender);
+                    break;
+                case MessageType.Exit:
+                    RemoveItemToPeerList(e.Sender);
+                    break;
+                default: break;
+            }
         }
 
         private void DisplayClientMessage(string message, string client)
@@ -146,11 +194,11 @@ namespace SimpleChat
         }
 
 
-
         private void btnSend_Click(object sender, EventArgs e)
         {
             try
             {
+
                 if (_client == null)
                 {
                     _client = new Client(IPAddress.Parse(txtFriendIp.Text), Convert.ToInt32(txtFriendPort.Text), _myNodeId);
@@ -159,6 +207,7 @@ namespace SimpleChat
 
                 }
                 var message = txtMessage.Text;
+
                 if (!string.IsNullOrEmpty(message))
                 {
                     var task = Task.Factory.StartNew(() => _client.Send(message));
@@ -184,6 +233,7 @@ namespace SimpleChat
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
+            ts.Cancel();
             if (_listener != null)
             {
                 _listener.OnMessageSending -= Server_OnMessageSending;
@@ -199,6 +249,12 @@ namespace SimpleChat
                 _client.OnMessageSending -= _client_OnMessageSending;
                 _client.Disconnect();
             }
+            if (udpClientWrapper != null)
+            {
+
+                udpClientWrapper.LeaveMulticastGroup($"{_myNodeId}@{_myIpAddress}");
+                udpClientWrapper.UdpMessageReceived -= OnUdpMessageReceived;
+            }
             manager.StopZeroTier();
         }
 
@@ -208,6 +264,77 @@ namespace SimpleChat
             ulong networkId = (ulong)Int64.Parse(networkidstr, System.Globalization.NumberStyles.HexNumber);
             manager.StartZeroTier(networkId);
 
+        }
+
+        private void lstBoxPeers_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (lstBoxPeers.SelectedItem != null)
+            {
+                var senderDetails = lstBoxPeers.SelectedItem.ToString().Split("@").ToList();
+                txtFriendIp.Text = senderDetails.Last();
+            }
+        }
+        MulticastUdpClient udpClientWrapper;
+
+
+        /// <summary>
+        /// UDP Message received event
+        /// </summary>
+        void OnUdpMessageReceived(object sender, MulticastUdpClient.UdpMessageReceivedEventArgs e)
+        {
+            MessagePacket receivedData = new MessagePacket(e.Buffer);
+            if (receivedData != null && receivedData.MessageTypeIdentifier != MessageType.Null)
+            {
+                var senderDetails = receivedData.ChatName.Split("@").ToList();
+                var senderip = IPAddress.Parse(senderDetails.Last());
+                var senderNodeID = senderDetails.First();
+                if (senderip == _myIpAddress || senderNodeID == _myNodeId) return;
+                switch (receivedData.MessageTypeIdentifier)
+                {
+                    case MessageType.Message:
+                        DisplayClientMessage(receivedData.ChatMessage, receivedData.ChatName);
+                        break;
+                    case MessageType.Enter:
+                        AddItemToPeerList(receivedData.ChatName);
+                        break;
+                    case MessageType.Exit:
+                        RemoveItemToPeerList(receivedData.ChatName);
+                        break;
+                    default: break;
+                }
+            }
+        }
+
+
+        private void btnStartUdpClient_Click(object sender, EventArgs e)
+        {
+            StartUdpListener();
+        }
+
+        private void StartUdpListener()
+        {
+            // Create address objects
+            int port = 2222;//Int32.Parse(txtPort.Text);
+            IPAddress multicastIPaddress = IPAddress.Parse("239.0.0.222");
+            IPAddress localIPaddress = IPAddress.Any;
+
+            // Create MulticastUdpClient
+            udpClientWrapper = new MulticastUdpClient(multicastIPaddress, port, localIPaddress);
+            udpClientWrapper.UdpMessageReceived += OnUdpMessageReceived;
+            DisplayClientMessage("UDP Client started", _myIpAddress.ToString());
+        }
+
+        private void btnSendUdpMessage_Click(object sender, EventArgs e)
+        {
+            SendAddMeMessage();
+        }
+
+        private void SendAddMeMessage()
+        {
+            var msg = new MessagePacket() { ChatMessage = "Add Me", ChatName = $"{_myNodeId}@{_myIpAddress}", MessageTypeIdentifier = MessageType.Enter };
+            // Send
+            udpClientWrapper.SendMulticast(msg.GetDataStream());
+            DisplayClientMessage("Sent message: " + $"{msg.ChatMessage}", $"{_myNodeId}@{_myIpAddress}");
         }
     }
 }
