@@ -15,7 +15,6 @@ namespace SimpleChat
         IPAddress _myIpAddress;
         readonly int _myPort = 50001;
         Server _listener;
-        Client _client;
         string _myNodeId;
         ConcurrentDictionary<string, Client> _clientList = new ConcurrentDictionary<string, Client>();
         public frmMain()
@@ -72,12 +71,12 @@ namespace SimpleChat
         {
             this.Invoke(new MethodInvoker(() =>
             {
-                    var peer = $"{nodeId}@{iPAddress}";
-                    if (lstBoxPeers.FindStringExact(nodeId)== ListBox.NoMatches)
-                    {
-                        lstBoxPeers.Items.Add(new Peer { NodeId = nodeId, IpAddress = iPAddress, Port = port });
-                        lstboxChat.Items.Insert(0, $"{DateTime.Now.ToShortTimeString()}: {peer} joined the chat.");
-                    }
+                var peer = $"{nodeId}@{iPAddress}";
+                if (lstBoxPeers.FindStringExact(nodeId) == ListBox.NoMatches)
+                {
+                    lstBoxPeers.Items.Add(new Peer { NodeId = nodeId, IpAddress = iPAddress, Port = port });
+                    lstboxChat.Items.Insert(0, $"{DateTime.Now.ToShortTimeString()}: {peer} joined the chat.");
+                }
             }
             ));
         }
@@ -86,10 +85,7 @@ namespace SimpleChat
         {
             this.Invoke(new MethodInvoker(() =>
             {
-                if (_clientList.TryRemove(nodeId, out Client client))
-                {
-                    RemoveClient(client);
-                }
+                RemoveClient(nodeId);
                 var peer = $"{nodeId}@{iPAddress}";
                 var idx = lstBoxPeers.FindStringExact(nodeId);
                 if (idx != ListBox.NoMatches)
@@ -107,7 +103,7 @@ namespace SimpleChat
             txtMyPort.Text = port;
             txtFriendPort.Text = port;
 
-           
+
         }
 
         //// Return your own IP
@@ -129,7 +125,9 @@ namespace SimpleChat
         {
             try
             {
-                txtMyIp.Text = _myIpAddress.ToString();
+                CancellationToken ct = ts.Token;
+                txtMyIp.Text
+                    = _myIpAddress.ToString();
                 var epLocal = new IPEndPoint(IPAddress.Parse(txtMyIp.Text),
                  Convert.ToInt32(txtMyPort.Text));
                 if (_listener != null)
@@ -144,10 +142,6 @@ namespace SimpleChat
                 _listener.OnError += Server_OnError; ;
                 _listener.OnSocketError += _listener_OnSocketError;
                 _ = Task.Factory.StartNew(_listener.Start, TaskCreationOptions.LongRunning);
-
-
-
-                CancellationToken ct = ts.Token;
 
                 StartUdpListener();
                 _ = RunInBackground(ct);
@@ -283,21 +277,34 @@ namespace SimpleChat
                 _listener.OnSocketError -= _listener_OnSocketError;
                 _listener.Stop();
             }
-
-            manager.MessageReceivedEvent -= Manager_MessageReceivedEvent;
-            manager.NetworkUpdatedEvent -= Manager_NetworkUpdatedEvent;
-            if (_client != null)
+            if (manager != null)
             {
-                RemoveClient(_client);
+                manager.MessageReceivedEvent -= Manager_MessageReceivedEvent;
+                manager.NetworkUpdatedEvent -= Manager_NetworkUpdatedEvent;
             }
+            RemoveAllClients();
             if (_udpClientWrapper != null)
             {
 
                 _udpClientWrapper.LeaveMulticastGroup($"{_myNodeId}@{_myIpAddress}:{_myPort}");
                 _udpClientWrapper.UdpMessageReceived -= OnUdpMessageReceived;
             }
-            manager.StopZeroTier();
+            manager?.StopZeroTier();
             manager = null;
+        }
+        private void RemoveAllClients()
+        {
+            foreach (var nodeid in _clientList.Keys.ToList())
+            {
+                RemoveClient(nodeid);
+            }
+        }
+        private void RemoveClient(string nodeid)
+        {
+            if (_clientList.TryRemove(nodeid, out Client client))
+            {
+                RemoveClient(client);
+            }
         }
 
         private void RemoveClient(Client client)
@@ -323,7 +330,7 @@ namespace SimpleChat
 
         private void lstBoxPeers_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
+
             var item = lstBoxPeers.SelectedItem as Peer;
             if (item != null)
             {
@@ -347,7 +354,7 @@ namespace SimpleChat
                 if (senderip == _myIpAddress || senderNodeID == _myNodeId) return;
                 switch (e.MessageType)
                 {
-                    
+
                     case MessageType.Enter:
                         AddItemToPeerList(senderNodeID, senderip, e.Port);
                         break;

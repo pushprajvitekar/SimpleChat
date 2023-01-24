@@ -19,6 +19,10 @@ namespace SimpleChat
             NodeId = nodeId;
             LocalEndPoint = new IPEndPoint(LocalIpAddress, PortNumber);
             listener = new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            //listener.SendTimeout = 10;
+            //listener.ReceiveTimeout = 10;
+            //listener.Blocking = false;
+
         }
 
         public IPEndPoint LocalEndPoint { get; }
@@ -43,7 +47,7 @@ namespace SimpleChat
                 while (runLoop)
                 {
                     var xclient = listener.Accept();
-                    var task = Task.Factory.StartNew(() => HandleClient(xclient));
+                    var task = Task.Run(() => HandleClient(xclient));
                     task.Wait();
                 }
 
@@ -72,15 +76,15 @@ namespace SimpleChat
             var clientEndpoint = (IPEndPoint)acceptedClient.RemoteEndPoint;
             var clientAddress = IPAddress.Parse(clientEndpoint.Address.ToString());
             string data = string.Empty;
-            var ackMesPacket = new MessagePacket() { MessageTypeIdentifier = MessageType.Ack, ChatName = NodeId };
-            var acKMsg = ackMesPacket.GetDataStream();
+            //var ackMesPacket = new MessagePacket() { MessageTypeIdentifier = MessageType.Ack, ChatName = NodeId };
+            //var acKMsg = ackMesPacket.GetDataStream();
             var packet = new MessagePacket();
             try
             {
                 try
                 {
                     packet = acceptedClient.ReceiveMessagePacket();
-                    acceptedClient.Send(acKMsg, 0, acKMsg.Length, SocketFlags.None);
+                    //acceptedClient.Send(acKMsg, 0, acKMsg.Length, SocketFlags.None);
                     acceptedClient.Shutdown(SocketShutdown.Both);
                     acceptedClient.Close();
                 }

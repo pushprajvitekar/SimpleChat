@@ -18,8 +18,9 @@ namespace SimpleChat
             RemoteEndPoint = new IPEndPoint(RemoteIpAddress, PortNumber);
             // Create a TCP/IP  socket.
             _sender = new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            //    _sender.SendTimeout = 50;
-            //   _sender.ReceiveTimeout = 50;
+            //_sender.SendTimeout = 10;
+            //_sender.ReceiveTimeout = 10;
+            //_sender.Blocking = false;
             NodeId = nodeId;
         }
         public string NodeId { get; set; }
@@ -47,12 +48,19 @@ namespace SimpleChat
         {
             if (_sender != null)
             {
-                // Release the socket.
-                _sender.Shutdown(SocketShutdown.Both);
-                _sender.Close();
+                try
+                {
+                    // Release the socket.
+                    _sender.Shutdown(SocketShutdown.Both);
+                    _sender.Close();
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-                _sender = null;
+                    _sender = null;
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+                }
+                catch 
+                {
+                }
+                
             }
         }
         public void Send(string message, MessageType messageType = MessageType.Message)
@@ -76,19 +84,19 @@ namespace SimpleChat
                 // var socketFlag = messageType == MessageType.Message ? SocketFlags.None : SocketFlags.Broadcast;
                 int bytesSent = _sender.Send(byteData, 0, byteData.Length, SocketFlags.None);
 
-                if (bytesSent > 0)
-                {
-                    var response = _sender.ReceiveMessagePacket();
-                    if (response.MessageTypeIdentifier == MessageType.Ack)
-                    {
-                        OnMessageSending?.Invoke(new MessageEventArgs($"Ack received", RemoteIpAddress, response.ChatName));
-                    }
-                }
-                else
-                {
-                    OnMessageSending?.Invoke(new MessageEventArgs($"Ack not received", RemoteIpAddress, string.Empty));
-                }
-                Disconnect();
+                //if (bytesSent > 0)
+                //{
+                //    var response = _sender.ReceiveMessagePacket();
+                //    if (response.MessageTypeIdentifier == MessageType.Ack)
+                //    {
+                //        OnMessageSending?.Invoke(new MessageEventArgs($"Ack received", RemoteIpAddress, response.ChatName));
+                //    }
+                //}
+                //else
+                //{
+                //    OnMessageSending?.Invoke(new MessageEventArgs($"Ack not received", RemoteIpAddress, string.Empty));
+                //}
+                
             }
             catch (ArgumentNullException ane)
             {
@@ -101,6 +109,10 @@ namespace SimpleChat
             catch (Exception ex)
             {
                 OnError?.Invoke(new ErrorMessageEventArgs($"Error: {ex.Message}", RemoteIpAddress));
+            }
+            finally
+            {
+                Disconnect();
             }
 
         }

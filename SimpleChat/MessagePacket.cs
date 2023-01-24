@@ -66,7 +66,7 @@ namespace SimpleChat
             }
             else
             {
-
+                MessageTypeIdentifier = MessageType.Null;
             }
         }
 
