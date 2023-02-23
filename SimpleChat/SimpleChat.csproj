@@ -10,18 +10,18 @@
 
   <ItemGroup>
     <Compile Remove="ClientDiscovery.cs" />
+    <Compile Remove="Events.cs" />
     <Compile Remove="FrmTest.cs" />
     <Compile Remove="FrmTest.Designer.cs" />
     <Compile Remove="Listener.cs" />
+    <Compile Remove="MessagePacket.cs" />
     <Compile Remove="Server2.cs" />
+    <Compile Remove="ZeroTierNodeManager.cs" />
+    <Compile Remove="ZSocketExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="ZeroTier.Sockets" Version="1.8.4" />
+    <ProjectReference Include="..\chatlibzt\chatlibzt.csproj" />
   </ItemGroup>
 
 </Project>

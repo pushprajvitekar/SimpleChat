@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using chatlibzt;
+using chatlibzt.Events;
+using System.Net;
 using System.Net.Sockets;
 using ZTSocket = ZeroTier.Sockets.Socket;
 using ZTSockets = ZeroTier.Sockets;
@@ -6,9 +8,9 @@ namespace SimpleChat
 {
     public class Client
     {
-        public event MessageEventHandler OnMessageSending;
-        public event ErrorEventHandler OnError;
-        public event SocketErrorEventHandler OnSocketError;
+        public event ChatMessageEventHandler OnMessageSending;
+        public event ChatAppErrorEventHandler OnError;
+        public event ZTSocketErrorEventHandler OnSocketError;
         ZTSocket _sender;
         public Client(IPAddress remoteIpAddress, int remotePortNumber, string nodeId)
         {
@@ -40,7 +42,7 @@ namespace SimpleChat
             }
             catch (Exception e)
             {
-                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {e.Message}", RemoteIpAddress));
+                OnError?.Invoke(new ChatAppErrorEventArgs($"Error: {e.Message}", RemoteIpAddress));
             }
             return _sender.Connected;
         }
@@ -100,15 +102,15 @@ namespace SimpleChat
             }
             catch (ArgumentNullException ane)
             {
-                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {ane.Message}", RemoteIpAddress));
+                OnError?.Invoke(new ChatAppErrorEventArgs($"Error: {ane.Message}", RemoteIpAddress));
             }
             catch (ZTSockets.SocketException e)
             {
-                OnSocketError?.Invoke(new SocketErrorMessageEventArgs($"Error: {e.Message}", RemoteIpAddress, e.ServiceErrorCode, e.SocketErrorCode));
+                OnSocketError?.Invoke(new ZTSocketErrorEventArgs($"Error: {e.Message}", RemoteIpAddress, e.ServiceErrorCode, e.SocketErrorCode));
             }
             catch (Exception ex)
             {
-                OnError?.Invoke(new ErrorMessageEventArgs($"Error: {ex.Message}", RemoteIpAddress));
+                OnError?.Invoke(new ChatAppErrorEventArgs($"Error: {ex.Message}", RemoteIpAddress));
             }
             finally
             {

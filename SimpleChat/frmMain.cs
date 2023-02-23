@@ -1,9 +1,7 @@
+using chatlibzt;
+using chatlibzt.Events;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms;
-using ZeroTier.Core;
 
 namespace SimpleChat
 {
@@ -11,7 +9,7 @@ namespace SimpleChat
     {
 
         ZeroTierNodeManager manager;
-        const string networkidstr = "416038decec8db58";
+        const string networkidstr = "416038dece74147f";//"416038decec8db58";
         IPAddress _myIpAddress;
         readonly int _myPort = 50001;
         Server _listener;
@@ -160,7 +158,7 @@ namespace SimpleChat
             }
         }
 
-        private void _listener_OnSocketError(SocketErrorMessageEventArgs e)
+        private void _listener_OnSocketError(ZTSocketErrorEventArgs e)
         {
             this.Invoke(new MethodInvoker(() => MessageBox.Show(e.Message, "Server socket error")));
         }
@@ -174,12 +172,12 @@ namespace SimpleChat
             }
         }
 
-        private void Server_OnError(ErrorMessageEventArgs e)
+        private void Server_OnError(ChatAppErrorEventArgs e)
         {
             this.Invoke(new MethodInvoker(() => MessageBox.Show(e.Message, "Server error")));
         }
 
-        private void Server_OnMessageSending(MessageEventArgs e)
+        private void Server_OnMessageSending(ChatMessageEventArgs e)
         {
             DisplayClientMessage(e.Message, e.SenderName);
         }
@@ -247,17 +245,17 @@ namespace SimpleChat
             return client;
         }
 
-        private void _client_OnSocketError(SocketErrorMessageEventArgs e)
+        private void _client_OnSocketError(ZTSocketErrorEventArgs e)
         {
             this.Invoke(new MethodInvoker(() => MessageBox.Show(e.Message, "Server socket error")));
         }
 
-        private void _client_OnMessageSending(MessageEventArgs e)
+        private void _client_OnMessageSending(ChatMessageEventArgs e)
         {
             AddItemToMessagesList($"Client Message: {e.Message}, Sender: {e.Sender}");
         }
 
-        private void Client_OnError(ErrorMessageEventArgs e)
+        private void Client_OnError(ChatAppErrorEventArgs e)
         {
             this.Invoke(new MethodInvoker(() => MessageBox.Show(e.Message, "Client error")));
         }

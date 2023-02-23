@@ -1,23 +1,28 @@
 ﻿using chatlibzt.Events;
-using System.Net;
+using chatlibzt;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
-using ZTSocket = ZeroTier.Sockets.Socket;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 using ZTSockets = ZeroTier.Sockets;
+using ZTSocket = ZeroTier.Sockets.Socket;
 
-namespace chatlibzt
+namespace ConsoleServer
 {
-    public class Server
+    public class ConsoleChatServer
     {
         public event ChatMessageEventHandler OnMessageSending;
         public event ChatAppErrorEventHandler OnError;
         public event ZTSocketErrorEventHandler OnSocketError;
         private readonly ZTSocket listener;
-        public Server(IPAddress localIpAddress, int portNumber, string nodeId)
+        public ConsoleChatServer(IPAddress localIpAddress, int portNumber)
         {
 
             LocalIpAddress = localIpAddress;
             PortNumber = portNumber;
-            NodeId = nodeId;
             LocalEndPoint = new IPEndPoint(LocalIpAddress, PortNumber);
             listener = new ZTSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             //listener.SendTimeout = 10;
@@ -29,12 +34,10 @@ namespace chatlibzt
         public IPEndPoint LocalEndPoint { get; }
         public IPAddress LocalIpAddress { get; }
         public int PortNumber { get; }
-        public string NodeId { get; }
-
 
 
         bool runLoop = true;
-        public void Start()
+        public void Start(object? ct)
         {
 
 
@@ -91,12 +94,12 @@ namespace chatlibzt
                 }
                 catch (ZTSockets.SocketException e)
                 {
-                    OnSocketError?.Invoke(new ZTSocketErrorEventArgs($"Error: {e.Message}" ,clientAddress,e.ServiceErrorCode, e.SocketErrorCode));
+                    OnSocketError?.Invoke(new ZTSocketErrorEventArgs($"Error: {e.Message}", clientAddress, e.ServiceErrorCode, e.SocketErrorCode));
                 }
                 if (packet.MessageTypeIdentifier != MessageType.Null)
                 {
 
-                    OnMessageSending?.Invoke(new ChatMessageEventArgs(packet.ChatMessage,clientAddress, $"{packet.ChatName}"));
+                    OnMessageSending?.Invoke(new ChatMessageEventArgs(packet.ChatMessage, clientAddress, $"{packet.ChatName}"));
                 }
             }
             catch (Exception ex)

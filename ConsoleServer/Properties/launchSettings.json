@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Windows": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\v_pus\\source\\repos\\SimpleChat\\ConsoleServer\\bin\\Debug\\net6.0-windows\\ConsoleServer.exe"
+    }
+  }
+}
