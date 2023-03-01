@@ -41,23 +41,23 @@ Console.WriteLine("Starting Chat Server......");
 
 IPAddress serveripaddr = IPAddress.Parse(serverip);
 ConsoleChatServer listener;
-OnStart(serveripaddr, serverport, ct);
+//Start(serveripaddr, serverport, ct);
 Console.WriteLine("Chat Server started!");
 do
 {
-    Console.WriteLine($"Type exit to quit");
+    Console.WriteLine($"To end server Type \"exit\"");
 }
 while (Console.ReadLine() != "exit");
-OnExit();
+//OnExit();
 Console.WriteLine("Chat server stoppped!");
-await host.RunAsync(ct);
-void OnStart(IPAddress address, int port, CancellationToken cancellationToken)
+
+void Start(IPAddress address, int port, CancellationToken cancellationToken)
 {
     listener = new ConsoleChatServer(address, port);
     listener.OnMessageSending += OnMessageSending; ;
     listener.OnError += OnError;
     listener.OnSocketError += OnSocketError;
-    _ = Task.Factory.StartNew(listener.Start, TaskCreationOptions.LongRunning, ct);
+    _ = Task.Factory.StartNew(listener.Start, ct, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 }
 
 void OnSocketError(chatlibzt.Events.ZTSocketErrorEventArgs e)

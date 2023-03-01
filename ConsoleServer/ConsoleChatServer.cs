@@ -1,14 +1,9 @@
 ﻿using chatlibzt.Events;
-using chatlibzt;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
+using System.Collections.Concurrent;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using ZTSockets = ZeroTier.Sockets;
+using System.Net.Sockets;
 using ZTSocket = ZeroTier.Sockets.Socket;
+using ZTSockets = ZeroTier.Sockets;
 
 namespace ConsoleServer
 {
@@ -18,6 +13,7 @@ namespace ConsoleServer
         public event ChatAppErrorEventHandler OnError;
         public event ZTSocketErrorEventHandler OnSocketError;
         private readonly ZTSocket listener;
+        readonly ConcurrentDictionary<string, Client> _clientList = new ConcurrentDictionary<string, Client>();
         public ConsoleChatServer(IPAddress localIpAddress, int portNumber)
         {
 
@@ -37,22 +33,18 @@ namespace ConsoleServer
 
 
         bool runLoop = true;
-        public void Start(object? ct)
+        public void Start()
         {
-
-
-            // Bind the socket to the local endpoint and
-            // listen for incoming connections.
-
             try
             {
                 listener.Bind(LocalEndPoint);
                 listener.Listen(100);
                 while (runLoop)
                 {
-                    var xclient = listener.Accept();
-                    var task = Task.Run(() => HandleClient(xclient));
-                    task.Wait();
+                    var zclient = listener.Accept();
+                    var client = new Client(zclient);
+                    AddClient(client);
+                    client.Start();
                 }
 
             }
@@ -75,39 +67,88 @@ namespace ConsoleServer
                 listener.Close();
             }
         }
-        private void HandleClient(ZTSocket acceptedClient)
+        private void BroadcastMessage(string userId, string message)
         {
-            var clientEndpoint = (IPEndPoint)acceptedClient.RemoteEndPoint;
-            var clientAddress = IPAddress.Parse(clientEndpoint.Address.ToString());
-            string data = string.Empty;
-            //var ackMesPacket = new MessagePacket() { MessageTypeIdentifier = MessageType.Ack, ChatName = NodeId };
-            //var acKMsg = ackMesPacket.GetDataStream();
-            var packet = new MessagePacket();
-            try
+            lock (this)
             {
-                try
+                for (int i = 0; i < _clientList.Count; i++)
                 {
-                    packet = acceptedClient.ReceiveMessagePacket();
-                    //acceptedClient.Send(acKMsg, 0, acKMsg.Length, SocketFlags.None);
-                    acceptedClient.Shutdown(SocketShutdown.Both);
-                    acceptedClient.Close();
+                    if (_clientList.TryGetValue(userId, out Client client))
+                    {
+                        try
+                        {
+                            client.Send(message);
+                        }
+                        catch (Exception)
+                        {
+                            RemoveClient(userId);
+                        }
+                    }
                 }
-                catch (ZTSockets.SocketException e)
-                {
-                    OnSocketError?.Invoke(new ZTSocketErrorEventArgs($"Error: {e.Message}", clientAddress, e.ServiceErrorCode, e.SocketErrorCode));
-                }
-                if (packet.MessageTypeIdentifier != MessageType.Null)
-                {
-
-                    OnMessageSending?.Invoke(new ChatMessageEventArgs(packet.ChatMessage, clientAddress, $"{packet.ChatName}"));
-                }
-            }
-            catch (Exception ex)
-            {
-                OnError?.Invoke(new ChatAppErrorEventArgs($"Error: {ex.Message}", clientAddress));
             }
         }
 
 
+        private void AddClient(Client client)
+        {
+            lock (this)
+            {
+
+                var ip = client.LocalIpAddress.ToString();
+                if (!_clientList.ContainsKey(ip))
+                {
+                    client.ClientError += OnClientError;
+                    client.ClientSocketError += OnClientSocketError;
+                    client.MessageReceived += OnClientMessageReceived;
+                    client.Joined += OnClientJoined;
+                    client.Left += OnClientLeft;
+                    _clientList.TryAdd(ip, client);
+                }
+            }
+        }
+        private void RemoveClient(string clientId)
+        {
+            lock (this)
+            {
+
+                if (_clientList.TryRemove(clientId, out Client client))
+                {
+                    RemoveClient(client);
+                }
+            }
+        }
+        private void RemoveClient(Client client)
+        {
+            if (client != null)
+            {
+                client.ClientError -= OnClientError;
+                client.ClientSocketError -= OnClientSocketError;
+                client.MessageReceived -= OnClientMessageReceived;
+                client.Joined -= OnClientJoined;
+                client.Left -= OnClientLeft;
+                client.Disconnect();
+            }
+        }
+        private void OnClientLeft(ChatMessageEventArgs e)
+        {
+            RemoveClient(e.NodeId);
+        }
+
+        private void OnClientJoined(ChatMessageEventArgs e)
+        {
+        }
+
+        private void OnClientMessageReceived(ChatMessageEventArgs e)
+        {
+            BroadcastMessage(e.NodeId, e.Message);
+        }
+
+        private void OnClientSocketError(ZTSocketErrorEventArgs e)
+        {
+        }
+
+        private void OnClientError(ChatAppErrorEventArgs e)
+        {
+        }
     }
 }

@@ -6,7 +6,7 @@
     },
     "Windows": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\v_pus\\source\\repos\\SimpleChat\\ConsoleServer\\bin\\Debug\\net6.0-windows\\ConsoleServer.exe"
+      "executablePath": "C:\\Users\\Pushparaj\\source\\repos\\pushprajvitekar\\SimpleChat\\ConsoleServer\\bin\\Debug\\net6.0-windows\\ConsoleServer.exe"
     }
   }
 }

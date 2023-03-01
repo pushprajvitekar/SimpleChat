@@ -68,6 +68,7 @@ namespace chatlibzt
         {
             List<byte> completeBuffer = new List<byte>();
             string? responseStr;
+            MessagePacket receivedData = new MessagePacket();
             while (true)
             {
                 var buffer = new byte[1024];
@@ -75,15 +76,21 @@ namespace chatlibzt
                 if (byteCounter > 0)
                 {
                     completeBuffer.AddRange(buffer.Take(byteCounter));
+                    responseStr = Encoding.ASCII.GetString(buffer.ToArray());
+                    if (responseStr.EndsWith(":EOM"))
+                    {
+                        receivedData = new MessagePacket(completeBuffer.ToArray());
+                        break;
+                    }
                 }
-                responseStr = Encoding.ASCII.GetString(completeBuffer.ToArray());
-                if (responseStr.EndsWith(":EOM"))
+                else
                 {
+                    receivedData = new MessagePacket() { MessageTypeIdentifier = MessageType.Exit };
                     break;
                 }
             }
             // Initialise a packet object to store the received data
-            MessagePacket receivedData = new MessagePacket(completeBuffer.ToArray());
+            
             return receivedData;
         }
     }
