@@ -77,9 +77,9 @@ void OnMessageSending(chatlibzt.Events.ChatMessageEventArgs e)
 
 void OnExit()
 {
-    listener.OnMessageSending += OnMessageSending; ;
-    listener.OnError += OnError;
-    listener.OnSocketError += OnSocketError;
+    listener.OnMessageSending -= OnMessageSending; ;
+    listener.OnError -= OnError;
+    listener.OnSocketError -= OnSocketError;
     listener.Stop();
     ts.Cancel();
 }

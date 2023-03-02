@@ -14,7 +14,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleServer", "ConsoleSer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "chatlibzt", "chatlibzt\chatlibzt.csproj", "{763DCFBF-A7D3-40BB-85F9-938E68622C02}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleClient", "ConsoleClient\ConsoleClient.csproj", "{B70EF171-EB50-45A0-8BF1-089A3AD29C75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleClient", "ConsoleClient\ConsoleClient.csproj", "{B70EF171-EB50-45A0-8BF1-089A3AD29C75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleChat", "ConsoleChat\ConsoleChat.csproj", "{C63F1F22-6B3D-42D4-8819-5D98ABF00E4B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,10 @@ Global
 		{B70EF171-EB50-45A0-8BF1-089A3AD29C75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B70EF171-EB50-45A0-8BF1-089A3AD29C75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B70EF171-EB50-45A0-8BF1-089A3AD29C75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C63F1F22-6B3D-42D4-8819-5D98ABF00E4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C63F1F22-6B3D-42D4-8819-5D98ABF00E4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C63F1F22-6B3D-42D4-8819-5D98ABF00E4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C63F1F22-6B3D-42D4-8819-5D98ABF00E4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

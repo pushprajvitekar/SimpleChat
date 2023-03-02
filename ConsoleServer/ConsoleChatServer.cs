@@ -73,7 +73,7 @@ namespace ConsoleServer
             {
                 for (int i = 0; i < _clientList.Count; i++)
                 {
-                    if (_clientList.TryGetValue(userId, out Client client))
+                    if (_clientList.TryGetValue(userId, out var client))
                     {
                         try
                         {
@@ -111,7 +111,7 @@ namespace ConsoleServer
             lock (this)
             {
 
-                if (_clientList.TryRemove(clientId, out Client client))
+                if (_clientList.TryRemove(clientId, out var client))
                 {
                     RemoveClient(client);
                 }
